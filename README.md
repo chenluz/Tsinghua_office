@@ -1,4 +1,4 @@
-""" This environment is created for the experiment in Tsinghua university 
+This environment is created for the experiment in Tsinghua university 
 Please install all the package in requirment.txt first. 
 Then run pip install -e . to install the environment
 
@@ -17,5 +17,4 @@ skin temperature is mean skin temperature calculated by PierceSET model
 thermal satisfaciton is PPD cacluated by PMV.
 
 To run the testing version: python main.py 
-""
 
