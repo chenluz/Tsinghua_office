@@ -1,0 +1,7 @@
+gym
+matplotlib
+pandas
+scipy
+scikit-learn
+numpy
+-e .
