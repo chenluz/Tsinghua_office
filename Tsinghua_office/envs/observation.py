@@ -8,7 +8,9 @@ from influxdb import InfluxDBClient
 import numpy as np
 
 ####Please change this into MySQL if needed
+occupant = {"skin_temperature": 'skin_temp_mean'}
 
+derivative = {"skin_temperature": "skin_temp_deriv"}
 
 class InfluxDB():
     """
@@ -29,18 +31,19 @@ class InfluxDB():
 
     ############### begin of help function #################
     def get_topValue_db(self, column, table):
-        _query = 'select top('+ column +', 1) from ' + table + ';'
-        #print(_query)
+        _query = 'select top('+ column +', 1) from ' + table + ' where "name" = \'Chenlu\' ;'
+        print(_query)
         data_db = self.client.query(_query)
         top_value = list(data_db.get_points())[0]["top"]
         return top_value
+
 
     def get_mean_pastTime_db(self, column, table, past_time):
         ## the mean funciton in influxdb is : 
         ##(1)if current time is 1:20, the latest mean over 3 mininutes will be 1:18
         ##(2) and the mean value for 1:18 is the averaged from [1:18, 1:21)
         ##So here we don't use mean in influxdb
-        _query = 'select '+ column +' from ' + table +' where time > now() - '+ past_time + ';'
+        _query = 'select '+ column +' from ' + table +' where "name" = \'Chenlu\' AND time > now() - '+ past_time + ';'
         #print(_query)
         data_db = self.client.query(_query)
         value_list = []
@@ -51,7 +54,7 @@ class InfluxDB():
         
 
     def get_derivative_db(self, column, table, interval):
-        _query = 'select derivative(mean('+ column +')) from '+ table +' where time > now() - '+ interval + ' group by time('+ interval +') ;'
+        _query = 'select derivative(mean('+ column +')) from '+ table +' where "name" = \'Chenlu\' AND time > now() - '+ interval + ' group by time('+ interval +') ;'
         #print(_query)
         data_db = self.client.query(_query)
         value_re = 0
@@ -64,13 +67,12 @@ class InfluxDB():
 
     def get_vote_db(self, column, table, past_time):
         ## if there is no voting in past time, set voting as 0 
-        _query = 'select '+ column +' from '+ table +' where time > now() - '+ past_time + ';'
+        _query = 'select '+ column +' from '+ table +' where "name" = \'Chenlu\' AND time > now() - '+ past_time + ';'
         #print(_query)
         data_db = self.client.query(_query)
         value_list = []
         value_re = 0
         for value in list(data_db.get_points()):
-            #print(value)
             value_list.append(value["value"])
         # There is no voting in last past_time minutes, set satisfaction as 0
         if len(value_list) == 0:
@@ -101,7 +103,6 @@ class InfluxDB():
         heart_rate               value
         thermal_satisfaction     value
         thermal_sensation        value
-        environment              temperature      humidity 
 
 
         Data: Timestamp field_value
@@ -118,24 +119,14 @@ class InfluxDB():
                 obs_dict[occupant[key]] = self.get_topValue_db('value', key)
             else:
                 obs_dict[occupant[key]] = value
-        for key in environment:
-            value = self.get_mean_pastTime_db(key, 'environment', past_time) 
-            if np.isnan(value):
-                obs_dict[environment[key]] = self.get_topValue_db(key, 'environment')
-            else:
-                obs_dict[environment[key]] = value  
 
         #2. derivative value of past 'past_time' data
-        obs_dict[derivative['temperature']] = self.get_derivative_db('temperature', 'environment', interval)
         obs_dict[derivative['skin_temperature']] = self.get_derivative_db('value', 'skin_temperature', interval)
 
         #3. Get lastest voting in last past_time minutes
-        #obs_dict["thermal_satisfaction"] = self.get_vote_db('value', 'thermal_satisfaction', past_time)
-        value = self.get_vote_db('value', 'thermal_sensation', past_time)
-        if np.isnan(value):
-            obs_dict["thermal_sensation"] = 0
-        else:
-            obs_dict["thermal_sensation"] = value
+
+        value = self.get_vote_db('value', 'satisfaction', past_time)
+        obs_dict["thermal_comfort"] = value
 
         return obs_dict
 
@@ -159,4 +150,7 @@ class InfluxDB():
 
 
 
+db = InfluxDB(host='localhost', port=8086, username='chenlu',
+            password='research', database='nus')
 
+print(db.get_observation("10m", "60s"))

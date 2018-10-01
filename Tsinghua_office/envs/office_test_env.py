@@ -1,21 +1,22 @@
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-from .observation import InfluxDB
+from .simulator import skinTemperature
+from .simulator import feedback
 import numpy as np
 import csv
 import datetime
 
 # ref: https://github.com/openai/gym/tree/master/gym/envs
 Ta_max = 30
-Ta_min = 24
+Ta_min = 18
 Rh_max = 51
 Rh_min = 50
 Tskin_max = 35.5
 Tskin_min = 32
 
 
-class OfficeEnv(gym.Env):
+class OfficeTestEnv(gym.Env):
 
 	def __init__(self):
 		self.nS = 1 # state space
@@ -27,8 +28,7 @@ class OfficeEnv(gym.Env):
 		self.cur_Rh = 0 
 		self.action = 0
 		self.reward = 0
-		self.db = InfluxDB(host='localhost', port=8086, username='chenlu',
-            password='research', database='nus')
+		self.vote = feedback()
 			
 
 	def _step(self, action):
@@ -54,22 +54,18 @@ class OfficeEnv(gym.Env):
 		self.cur_Rh  = np.random.choice(np.arange(Rh_min, Rh_max, 1))
 
 
-
 		if self.cur_Ta > Ta_max:
 			self.is_terminal = True
 		elif self.cur_Ta < Ta_min:
 			self.is_terminal = True
 
-		# get obervation from Database
-		ob_dict = self.db.get_observation("15m","60s")
+		# get PPD after action from PMV model
+		self.reward = -1*self.vote.comfPMV(self.cur_Ta, self.cur_Ta, self.cur_Rh, 1.0)[1] ##PPD
 
-		# get latest comfort feedback
-		self.reward = ob_dict["thermal_comfort"]
-
-		# get past 60s mean wrist skin temperature 
-		self.cur_Skin = ob_dict["skin_temp_mean"]
-		#state = self._process_state_table(self.cur_Skin)
-		state = self._process_state_DDQN(self.cur_Skin)
+		# get mean skin temperature from PierceSET model
+		self.cur_Skin = skinTemperature().comfPierceSET(self.cur_Ta, self.cur_Ta, self.cur_Rh, 1.0)
+		state = self._process_state_table(self.cur_Skin)
+		#state = self._process_state_DDQN(self.cur_Skin)
 	
 		return state, self.reward, self.is_terminal, {}
 
@@ -121,9 +117,9 @@ class OfficeEnv(gym.Env):
 		self.is_terminal = False
 		self.cur_Ta = np.random.choice([Ta_min, Ta_max])
 		self.cur_Rh  = np.random.choice(np.arange(Rh_min, Rh_max))
-		self.cur_Skin = self.db.get_observation("15m","60s")["skin_temp_mean"]
-		#state = self._process_state_table(self.cur_Skin)
-		state = self._process_state_DDQN(self.cur_Skin)
+		self.cur_Skin = skinTemperature().comfPierceSET(self.cur_Ta, self.cur_Ta, self.cur_Rh, 1.0)
+		state = self._process_state_table(self.cur_Skin)
+		#state = self._process_state_DDQN(self.cur_Skin)
 		return state
 
 

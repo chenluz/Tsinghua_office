@@ -7,6 +7,7 @@ import time
 import numpy as np
 import Tsinghua_office
 import TD.QLearning as QL
+import DDQ.DDQN as DDQ
 
 from lib import plotting
 import argparse
@@ -53,9 +54,9 @@ def get_output_folder(parent_dir, env_name):
 
 def main():  
     parser = argparse.ArgumentParser(description='Run Reinforcment Learning at an Office in Tsinghua University')
-    parser.add_argument('--env', default='band_control-v0', help='Environment name')
-    parser.add_argument('-o', '--output', default='office-v0', help='Directory to save data to')
-    parser.add_argument('--num', default=1000, help='Number of Episodes')
+    parser.add_argument('--env', default='band_control-v1', help='Environment name')
+    parser.add_argument('-o', '--output', default='office-v2', help='Directory to save data to')
+    parser.add_argument('--num', default=700, help='Number of Episodes')
     parser.add_argument('--gamma', default=0.95, help='Discount Factor')
     parser.add_argument('--alpha', default=0.5, help='Constant step-size parameter')
     parser.add_argument('--epsilon', default=1.0, help='Epsilon greedy policy')
@@ -74,11 +75,24 @@ def main():
     #create environment
     env = gym.make(args.env)
 
-    Q, stats = QL.q_learning(env, int(args.num), float(args.gamma), float(args.alpha), float(args.epsilon), 
-         float(args.epsilon_min),  float(args.epsilon_decay), output)
+    ################# tabular Q learning ##########
+
+    # Q, stats = QL.q_learning(env, int(args.num), float(args.gamma), float(args.alpha), float(args.epsilon), 
+    #      float(args.epsilon_min),  float(args.epsilon_decay), output)
+    # plotting.plot_episode_stats(stats, smoothing_window=1)
+
+    # print(Q)
+
+    ############### double deep Q learning ################
+
+    state_size = env.nS
+    action_size = env.nA
+    agent = DDQ.DQNAgent(state_size, action_size, float(args.gamma), float(args.lr))
+    stats = DDQ.q_learning(env, agent, int(args.num), int(args.batch_size),
+        float(args.epsilon), float(args.epsilon_min), float(args.epsilon_decay), output)
     plotting.plot_episode_stats(stats, smoothing_window=1)
 
-    print(Q)
+    # DDQ.evaluation(env, agent, output)
 
 if __name__ == '__main__':
     main()
