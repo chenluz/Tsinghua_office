@@ -10,8 +10,8 @@ import datetime
 # ref: https://github.com/openai/gym/tree/master/gym/envs
 Ta_max = 30
 Ta_min = 18
-Rh_max = 51
-Rh_min = 50
+Rh_max = 80
+Rh_min = 20
 Tskin_max = 35.5
 Tskin_min = 32
 
@@ -64,8 +64,8 @@ class OfficeTestEnv(gym.Env):
 
 		# get mean skin temperature from PierceSET model
 		self.cur_Skin = skinTemperature().comfPierceSET(self.cur_Ta, self.cur_Ta, self.cur_Rh, 1.0)
-		state = self._process_state_table(self.cur_Skin)
-		#state = self._process_state_DDQN(self.cur_Skin)
+		#state = self._process_state_table(self.cur_Skin)
+		state = self._process_state_DDQN(self.cur_Skin)
 	
 		return state, self.reward, self.is_terminal, {}
 
@@ -118,8 +118,8 @@ class OfficeTestEnv(gym.Env):
 		self.cur_Ta = np.random.choice([Ta_min, Ta_max])
 		self.cur_Rh  = np.random.choice(np.arange(Rh_min, Rh_max))
 		self.cur_Skin = skinTemperature().comfPierceSET(self.cur_Ta, self.cur_Ta, self.cur_Rh, 1.0)
-		state = self._process_state_table(self.cur_Skin)
-		#state = self._process_state_DDQN(self.cur_Skin)
+		#state = self._process_state_table(self.cur_Skin)
+		state = self._process_state_DDQN(self.cur_Skin)
 		return state
 
 

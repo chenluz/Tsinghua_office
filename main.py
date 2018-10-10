@@ -7,7 +7,8 @@ import time
 import numpy as np
 import Tsinghua_office
 import TD.QLearning as QL
-import DDQ.DDQN as DDQ
+import QN.QN as QN
+import DoubleQN.DoubleQN as DoubleQN
 
 from lib import plotting
 import argparse
@@ -54,13 +55,13 @@ def get_output_folder(parent_dir, env_name):
 
 def main():  
     parser = argparse.ArgumentParser(description='Run Reinforcment Learning at an Office in Tsinghua University')
-    parser.add_argument('--env', default='band_control-v1', help='Environment name')
-    parser.add_argument('-o', '--output', default='office-v2', help='Directory to save data to')
-    parser.add_argument('--num', default=700, help='Number of Episodes')
+    parser.add_argument('--env', default='band_control-v0', help='Environment name')
+    parser.add_argument('-o', '--output', default='office-QN-Rh', help='Directory to save data to')
+    parser.add_argument('--num', default=1000, help='Number of Episodes')
     parser.add_argument('--gamma', default=0.95, help='Discount Factor')
     parser.add_argument('--alpha', default=0.5, help='Constant step-size parameter')
-    parser.add_argument('--epsilon', default=1.0, help='Epsilon greedy policy')
-    parser.add_argument('--epsilon_min', default=0.01, help='Smallest Epsilon that can get')
+    parser.add_argument('--epsilon', default=0.05, help='Epsilon greedy policy')
+    parser.add_argument('--epsilon_min', default=0.05, help='Smallest Epsilon that can get')
     parser.add_argument('--epsilon_decay', default=0.9, help='Epsilon decay after the number of episodes')
     parser.add_argument('--batch_size', default=32, help='Sampling batch size')
     parser.add_argument('--lr', default=0.001, help='Learning rate')
@@ -73,22 +74,34 @@ def main():
   
 
     #create environment
+    print(args.env)
     env = gym.make(args.env)
 
     ################# tabular Q learning ##########
-
+    #### change the environment to  _process_state_table before use it
     # Q, stats = QL.q_learning(env, int(args.num), float(args.gamma), float(args.alpha), float(args.epsilon), 
     #      float(args.epsilon_min),  float(args.epsilon_decay), output)
     # plotting.plot_episode_stats(stats, smoothing_window=1)
 
     # print(Q)
 
-    ############### double deep Q learning ################
+    ############### Q learning with Neural network approximation ################
+    #### change the environment to  _process_state_DDQN before use it
+
+    # state_size = env.nS
+    # action_size = env.nA
+    # agent = QN.QNAgent(state_size, action_size, float(args.gamma), float(args.lr))
+    # stats = QN.q_learning(env, agent, int(args.num), int(args.batch_size),
+    #     float(args.epsilon), float(args.epsilon_min), float(args.epsilon_decay), output)
+    # plotting.plot_episode_stats(stats, smoothing_window=1)
+
+    ############### Double Q Learning ################
+    #### change the environment to  _process_state_DDQN before use it
 
     state_size = env.nS
     action_size = env.nA
-    agent = DDQ.DQNAgent(state_size, action_size, float(args.gamma), float(args.lr))
-    stats = DDQ.q_learning(env, agent, int(args.num), int(args.batch_size),
+    agent = DoubleQN.DoubleQNAgent(state_size, action_size, float(args.gamma), float(args.lr))
+    stats = DoubleQN.q_learning(env, agent, int(args.num), int(args.batch_size),
         float(args.epsilon), float(args.epsilon_min), float(args.epsilon_decay), output)
     plotting.plot_episode_stats(stats, smoothing_window=1)
 
