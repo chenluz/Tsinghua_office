@@ -57,7 +57,7 @@ def main():
     parser = argparse.ArgumentParser(description='Run Reinforcment Learning at an Office in Tsinghua University')
     parser.add_argument('--env', default='band_control-v0', help='Environment name')
     parser.add_argument('-o', '--output', default='office-QN-Rh', help='Directory to save data to')
-    parser.add_argument('--num', default=1000, help='Number of Episodes')
+    parser.add_argument('--num', default=500, help='Number of Episodes')
     parser.add_argument('--gamma', default=0.95, help='Discount Factor')
     parser.add_argument('--alpha', default=0.5, help='Constant step-size parameter')
     parser.add_argument('--epsilon', default=0.05, help='Epsilon greedy policy')
@@ -85,25 +85,25 @@ def main():
 
     # print(Q)
 
-    ############### Q learning with Neural network approximation ################
-    #### change the environment to  _process_state_DDQN before use it
-
-    # state_size = env.nS
-    # action_size = env.nA
-    # agent = QN.QNAgent(state_size, action_size, float(args.gamma), float(args.lr))
-    # stats = QN.q_learning(env, agent, int(args.num), int(args.batch_size),
-    #     float(args.epsilon), float(args.epsilon_min), float(args.epsilon_decay), output)
-    # plotting.plot_episode_stats(stats, smoothing_window=1)
-
-    ############### Double Q Learning ################
+    ############### Q learning with Neural network approximation and fixed target ################
     #### change the environment to  _process_state_DDQN before use it
 
     state_size = env.nS
     action_size = env.nA
-    agent = DoubleQN.DoubleQNAgent(state_size, action_size, float(args.gamma), float(args.lr))
-    stats = DoubleQN.q_learning(env, agent, int(args.num), int(args.batch_size),
+    agent = QN.QNAgent(state_size, action_size, float(args.gamma), float(args.lr))
+    stats = QN.q_learning(env, agent, int(args.num), int(args.batch_size),
         float(args.epsilon), float(args.epsilon_min), float(args.epsilon_decay), output)
     plotting.plot_episode_stats(stats, smoothing_window=1)
+
+    ############### Double Q neural network Learning ################
+    #### change the environment to  _process_state_DDQN before use it
+
+    # state_size = env.nS
+    # action_size = env.nA
+    # agent = DoubleQN.DoubleQNAgent(state_size, action_size, float(args.gamma), float(args.lr))
+    # stats = DoubleQN.q_learning(env, agent, int(args.num), int(args.batch_size),
+    #     float(args.epsilon), float(args.epsilon_min), float(args.epsilon_decay), output)
+    # plotting.plot_episode_stats(stats, smoothing_window=1)
 
     # DDQ.evaluation(env, agent, output)
 

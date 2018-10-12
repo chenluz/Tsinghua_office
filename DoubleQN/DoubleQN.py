@@ -14,7 +14,7 @@ MAX_STEP = 200
 UPDATE_STEP = 30000
 
 
-class QNAgent:
+class DoubleQNAgent:
     def __init__(self, state_size, action_size,discount_factor, learning_rate):
         self.state_size = state_size
         self.action_size = action_size
@@ -26,6 +26,7 @@ class QNAgent:
         self.update_target_model()
         self.step_count_total = 1
         self.target_update = UPDATE_STEP
+        self.use_target = True
 
     def _huber_loss(self, target, prediction):
         # sqrt(1+error^2)-1
@@ -49,25 +50,41 @@ class QNAgent:
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
+
     def act(self, state,epsilon):
         #self.step_count_total += 1
         if np.random.rand() <= epsilon:
             return random.randrange(self.action_size)
-        act_values = self.model.predict(state)
+        act_values = self.predict(state)
 
         return np.argmax(act_values[0])  # returns action
 
+
+    def predict(self, state, use_target=False):
+        if use_target:
+            return self.target_model.predict(state)
+        else:
+            return self.model.predict(state)
+
+
     def replay(self, batch_size):
         minibatch = random.sample(self.memory, batch_size)
+        ## update by fliping a coin
         for state, action, reward, next_state, done in minibatch:
-            target = self.model.predict(state)
+            flip = 1#random.randint(0, 1)# flipping is not implemented here. .
+            if(flip == 0):
+                self.use_target = not self.use_target
+            target = self.predict(state, not self.use_target)
+            print(target)
             if done:
                 target[0][action] = reward
             else:
 
-                t = self.target_model.predict(next_state)[0]
-                target[0][action] = reward + self.gamma * np.amax(t)
- 
+                a = np.argmax(self.predict(next_state, not self.use_target)[0])
+                t = self.predict(next_state, self.use_target)[0]
+                print(t)
+                target[0][action] = reward + self.gamma * t[a]
+
             self.model.fit(state, target, epochs=1, verbose=0)
         ## update target model
         if self.step_count_total % self.target_update == 0:
