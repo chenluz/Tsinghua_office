@@ -11,9 +11,9 @@ import datetime
 Ta_max = 30
 Ta_min = 18
 Rh_max = 80
-Rh_min = 20
-Tskin_max = 35.5
-Tskin_min = 32
+Rh_min = 10
+Tskin_max = 35.76
+Tskin_min = 32.17
 
 
 class OfficeTestEnv(gym.Env):
@@ -54,16 +54,19 @@ class OfficeTestEnv(gym.Env):
 		self.cur_Rh  = np.random.choice(np.arange(Rh_min, Rh_max, 1))
 
 
-		if self.cur_Ta > Ta_max:
-			self.is_terminal = True
-		elif self.cur_Ta < Ta_min:
-			self.is_terminal = True
-
-		# get PPD after action from PMV model
-		self.reward = -1*self.vote.comfPMV(self.cur_Ta, self.cur_Ta, self.cur_Rh, 1.0)[1] ##PPD
-
 		# get mean skin temperature from PierceSET model
 		self.cur_Skin = skinTemperature().comfPierceSET(self.cur_Ta, self.cur_Ta, self.cur_Rh, 1.0)
+
+		if self.cur_Skin >Tskin_max:
+			self.is_terminal = True
+		elif self.cur_Skin < Tskin_min:
+			self.is_terminal = True
+
+		if self.is_terminal == True:
+			self.reward = -2
+		else:
+			# get converted reward after action from PMV model
+			self.reward = self.vote.comfPMV(self.cur_Ta, self.cur_Ta, self.cur_Rh, 1.0)[1] 
 		#state = self._process_state_table(self.cur_Skin)
 		state = self._process_state_DDQN(self.cur_Skin)
 	

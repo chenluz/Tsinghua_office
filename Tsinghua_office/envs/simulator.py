@@ -306,15 +306,30 @@ class feedback():
             - 0.2179 * pow(pmv, 2.0))
 
         r = []
-        r.append(pmv)
+    
         r.append(ppd)
+        if pmv > 0.5:
+            pmv = -1
+        elif pmv < -0.5:
+            pmv = -1
+        else:
+            pmv = 0
+        r.append(pmv)
 
         return r
 
-# s = skinTemperature()
+#s = skinTemperature()
+# skin = s.comfPierceSET(18, 18, 80, 1.0)
+# print(skin)
+# skin = s.comfPierceSET(18, 18, 10, 1.0)
+# print(skin)
+# skin = s.comfPierceSET(30, 30, 80, 1.0)
+# print(skin)
+# skin = s.comfPierceSET(30, 30, 10, 1.0)
+# print(skin)
 # f = feedback()
 # for t in range(18, 31):
 #     skin = s.comfPierceSET(t, t, 50, 1.0)
 
 #     feed = f.comfPMV(t,t, 50, 1.0)
-#     print(t, skin, -1*feed[1])
+#     print(t, skin, feed[1])

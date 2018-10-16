@@ -75,14 +75,12 @@ class DoubleQNAgent:
             if(flip == 0):
                 self.use_target = not self.use_target
             target = self.predict(state, not self.use_target)
-            print(target)
             if done:
                 target[0][action] = reward
             else:
 
                 a = np.argmax(self.predict(next_state, not self.use_target)[0])
                 t = self.predict(next_state, self.use_target)[0]
-                print(t)
                 target[0][action] = reward + self.gamma * t[a]
 
             self.model.fit(state, target, epochs=1, verbose=0)
@@ -150,10 +148,13 @@ def q_learning(env, agent, num_episodes, batch_size, epsilon, epsilon_min, epsil
             agent.remember(state, action, reward, next_state, done)
             ## make next_state the new current state for the next frame.
             state = next_state
-            if done: 
-                break
+
             if len(agent.memory) > batch_size:
                     agent.replay(batch_size)  
+
+            if done: 
+                break
+           
         mean_score = stats.episode_rewards[i_episode]/stats.episode_lengths[i_episode]
         print("episode: {}/{}, score: {}, e: {:.2}, steps:{}, mean score:{:.2}"
             .format(i_episode, num_episodes,  stats.episode_rewards[i_episode], epsilon, 
@@ -177,8 +178,8 @@ def write_csv(folder, episode, step_num, average_score):
 
 
 def evaluation(env, agent, folder):
-    model = agent.load(folder + "_qn200.h5")
-    for Skin in np.linspace(32,36,20):
+    model = agent.load(folder + "_qn400.h5")
+    for Skin in np.linspace(32.17,35.7,100):
         state = Skin
         print(state)
         state = env._process_state_DDQN(state)

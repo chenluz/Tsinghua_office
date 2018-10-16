@@ -133,10 +133,12 @@ def q_learning(env, agent, num_episodes, batch_size, epsilon, epsilon_min, epsil
             agent.remember(state, action, reward, next_state, done)
             ## make next_state the new current state for the next frame.
             state = next_state
-            if done: 
-                break
+        
             if len(agent.memory) > batch_size:
                     agent.replay(batch_size)  
+
+            if done: 
+                break
         mean_score = stats.episode_rewards[i_episode]/stats.episode_lengths[i_episode]
         print("episode: {}/{}, score: {}, e: {:.2}, steps:{}, mean score:{:.2}"
             .format(i_episode, num_episodes,  stats.episode_rewards[i_episode], epsilon, 
